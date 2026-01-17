@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Sleep - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Edit Sleep Record</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('sleep_history') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<section class="card">
+    <form action="{{ url_for('sleep_edit', sleep_id=sleep_log.id) }}" method="post">
+        <h3>Sleep Time</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="sleep_date">Date</label>
+                <input type="date" id="sleep_date" name="sleep_date" class="form-control"
+                       value="{{ sleep_log.sleep_time[:10] }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="sleep_time">Time</label>
+                <input type="time" id="sleep_time" name="sleep_time" class="form-control"
+                       value="{{ sleep_log.sleep_time[11:16] }}" required>
+            </div>
+        </div>
+
+        {% if sleep_log.wake_time %}
+        <h3>Wake Time</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="wake_date">Date</label>
+                <input type="date" id="wake_date" name="wake_date" class="form-control"
+                       value="{{ sleep_log.wake_time[:10] }}">
+            </div>
+
+            <div class="form-group">
+                <label for="wake_time">Time</label>
+                <input type="time" id="wake_time" name="wake_time" class="form-control"
+                       value="{{ sleep_log.wake_time[11:16] }}">
+            </div>
+        </div>
+        {% else %}
+        <h3>Wake Time (optional)</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="wake_date">Date</label>
+                <input type="date" id="wake_date" name="wake_date" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="wake_time">Time</label>
+                <input type="time" id="wake_time" name="wake_time" class="form-control">
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="quality">Sleep Quality (1-10)</label>
+            <input type="number" id="quality" name="quality" class="form-control"
+                   min="1" max="10" value="{{ sleep_log.quality or 5 }}">
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" class="form-control" rows="3">{{ sleep_log.notes or '' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large btn-block">Update Sleep Record</button>
+    </form>
+</section>
+{% endblock %}

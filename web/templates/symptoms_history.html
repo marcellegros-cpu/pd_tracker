@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Symptom History - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Symptom History</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('symptoms') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<!-- Filters -->
+<section class="card">
+    <form method="get" class="filter-form">
+        <div class="form-group">
+            <label for="days">Days</label>
+            <select name="days" id="days" class="form-control" onchange="this.form.submit()">
+                <option value="7" {% if days == 7 %}selected{% endif %}>7 days</option>
+                <option value="14" {% if days == 14 %}selected{% endif %}>14 days</option>
+                <option value="30" {% if days == 30 %}selected{% endif %}>30 days</option>
+                <option value="90" {% if days == 90 %}selected{% endif %}>90 days</option>
+            </select>
+        </div>
+    </form>
+</section>
+
+<!-- Symptom List -->
+<section class="card">
+    <h2>Symptoms ({{ symptoms|length }})</h2>
+    {% if symptoms %}
+        {% for symptom in symptoms %}
+        <div class="list-item">
+            <div class="list-item-main">
+                <div class="symptom-header">
+                    {% if symptom.on_off_state %}
+                        <span class="badge badge-{% if symptom.on_off_state == 'on' %}success{% elif symptom.on_off_state == 'off' %}danger{% else %}warning{% endif %}">
+                            {{ symptom.on_off_state|upper }}
+                        </span>
+                    {% endif %}
+                    <span class="muted">{{ symptom.timestamp|dateformat('%a, %b %d at %I:%M %p') }}</span>
+                </div>
+                {% if symptom.severity %}
+                    <p class="small">Severity: {{ symptom.severity }}/10</p>
+                {% endif %}
+                {% if symptom.tremor or symptom.rigidity or symptom.bradykinesia or symptom.dyskinesia or symptom.freezing or symptom.balance %}
+                    <p class="small symptoms-detail">
+                        {% if symptom.tremor %}Tremor: {{ symptom.tremor }}/10{% endif %}
+                        {% if symptom.rigidity %}{% if symptom.tremor %}, {% endif %}Rigidity: {{ symptom.rigidity }}/10{% endif %}
+                        {% if symptom.bradykinesia %}{% if symptom.tremor or symptom.rigidity %}, {% endif %}Bradykinesia: {{ symptom.bradykinesia }}/10{% endif %}
+                        {% if symptom.dyskinesia %}{% if symptom.tremor or symptom.rigidity or symptom.bradykinesia %}, {% endif %}Dyskinesia: {{ symptom.dyskinesia }}/10{% endif %}
+                        {% if symptom.freezing %}{% if symptom.tremor or symptom.rigidity or symptom.bradykinesia or symptom.dyskinesia %}, {% endif %}Freezing: {{ symptom.freezing }}/10{% endif %}
+                        {% if symptom.balance %}{% if symptom.tremor or symptom.rigidity or symptom.bradykinesia or symptom.dyskinesia or symptom.freezing %}, {% endif %}Balance: {{ symptom.balance }}/10{% endif %}
+                    </p>
+                {% endif %}
+                {% if symptom.notes %}
+                    <p class="small muted">{{ symptom.notes }}</p>
+                {% endif %}
+            </div>
+            <div class="list-item-actions">
+                <a href="{{ url_for('symptom_edit', symptom_id=symptom.id) }}" class="btn btn-small">Edit</a>
+                <form action="{{ url_for('symptom_delete', symptom_id=symptom.id) }}" method="post" class="inline-form" onsubmit="return confirm('Delete this symptom entry?');">
+                    <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No symptoms found for this period.</p>
+    {% endif %}
+</section>
+{% endblock %}

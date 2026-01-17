@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Correlation Chart - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Medication Compliance vs Symptoms</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('visualizations') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<!-- Controls -->
+<section class="card">
+    <form method="get" class="filter-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="view">View</label>
+                <select name="view" id="view" class="form-control" onchange="this.form.submit()">
+                    <option value="weekly" {% if view_type == 'weekly' %}selected{% endif %}>Daily (Weekly)</option>
+                    <option value="hourly" {% if view_type == 'hourly' %}selected{% endif %}>Hourly</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="days">Days</label>
+                <select name="days" id="days" class="form-control" onchange="this.form.submit()">
+                    <option value="3" {% if days == 3 %}selected{% endif %}>3 days</option>
+                    <option value="7" {% if days == 7 %}selected{% endif %}>7 days</option>
+                    <option value="14" {% if days == 14 %}selected{% endif %}>14 days</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>30 days</option>
+                </select>
+            </div>
+        </div>
+    </form>
+</section>
+
+<!-- Chart -->
+<section class="card">
+    <h2>Medication Doses & Symptom States</h2>
+    <canvas id="correlationChart" style="max-height: 400px;"></canvas>
+</section>
+
+<section class="card">
+    <h2>Severity Trend</h2>
+    <canvas id="severityChart" style="max-height: 300px;"></canvas>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Data from backend
+const chartData = {
+    labels: {{ data.labels | tojson }},
+    compliance: {{ data.compliance | tojson }},
+    onStates: {{ data.on_states | tojson }},
+    offStates: {{ data.off_states | tojson }},
+    severity: {{ data.severity | tojson }}
+};
+
+// Correlation Chart - Doses vs ON/OFF States
+const ctx1 = document.getElementById('correlationChart').getContext('2d');
+new Chart(ctx1, {
+    type: 'bar',
+    data: {
+        labels: chartData.labels,
+        datasets: [
+            {
+                label: 'Medication Doses',
+                data: chartData.compliance,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1,
+                yAxisID: 'y'
+            },
+            {
+                label: 'ON States',
+                data: chartData.onStates,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgb(75, 192, 192)',
+                borderWidth: 1,
+                yAxisID: 'y'
+            },
+            {
+                label: 'OFF States',
+                data: chartData.offStates,
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                borderColor: 'rgb(255, 99, 132)',
+                borderWidth: 1,
+                yAxisID: 'y'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: {
+            mode: 'index',
+            intersect: false
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Count'
+                }
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: 'Medication Compliance vs Symptom States Over Time'
+            },
+            legend: {
+                display: true,
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Severity Trend Chart
+const ctx2 = document.getElementById('severityChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'line',
+    data: {
+        labels: chartData.labels,
+        datasets: [
+            {
+                label: 'Average Severity',
+                data: chartData.severity,
+                backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                borderColor: 'rgb(255, 206, 86)',
+                borderWidth: 2,
+                tension: 0.1,
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 10,
+                title: {
+                    display: true,
+                    text: 'Severity (0-10)'
+                }
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: 'Symptom Severity Trend'
+            },
+            legend: {
+                display: true,
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

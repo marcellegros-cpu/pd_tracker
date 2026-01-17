@@ -1,0 +1,15 @@
+[Unit]
+Description=PD Tracker Web Server
+After=network.target
+
+[Service]
+Type=simple
+User=marcel
+WorkingDirectory=/mnt/Storage/pd_tracker
+Environment="PATH=/mnt/Storage/pd_tracker/venv/bin:/usr/bin"
+ExecStart=/mnt/Storage/pd_tracker/venv/bin/python -m web.app
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

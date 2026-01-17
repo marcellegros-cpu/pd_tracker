@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Manual Sleep Entry - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Manual Sleep Entry</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('sleep') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<section class="card">
+    <p class="muted">Use this to log a past sleep session.</p>
+
+    <form action="{{ url_for('sleep_manual') }}" method="post">
+        <h3>Sleep Time</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="sleep_date">Date</label>
+                <input type="date" id="sleep_date" name="sleep_date" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="sleep_time">Time</label>
+                <input type="time" id="sleep_time" name="sleep_time" class="form-control" value="22:00" required>
+            </div>
+        </div>
+
+        <h3>Wake Time</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="wake_date">Date</label>
+                <input type="date" id="wake_date" name="wake_date" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="wake_time">Time</label>
+                <input type="time" id="wake_time" name="wake_time" class="form-control" value="07:00" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="quality">Sleep Quality (1-10)</label>
+            <input type="number" id="quality" name="quality" class="form-control"
+                   min="1" max="10" value="5">
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" class="form-control" rows="3"
+                      placeholder="Optional notes about your sleep"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large btn-block">Log Sleep Session</button>
+    </form>
+</section>
+{% endblock %}

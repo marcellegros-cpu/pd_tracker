@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Sleep History - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Sleep History</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('sleep_manual') }}" class="btn btn-secondary">Manual Entry</a>
+        <a href="{{ url_for('sleep') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<!-- Filters and Stats -->
+<section class="card">
+    <form method="get" class="filter-form">
+        <div class="form-group">
+            <label for="days">Days</label>
+            <select name="days" id="days" class="form-control" onchange="this.form.submit()">
+                <option value="7" {% if days == 7 %}selected{% endif %}>7 days</option>
+                <option value="14" {% if days == 14 %}selected{% endif %}>14 days</option>
+                <option value="30" {% if days == 30 %}selected{% endif %}>30 days</option>
+                <option value="90" {% if days == 90 %}selected{% endif %}>90 days</option>
+            </select>
+        </div>
+    </form>
+
+    {% if stats.total_nights > 0 %}
+    <div class="stats-summary">
+        <h3>Summary</h3>
+        <div class="stats-row">
+            <div class="stat">
+                <span class="stat-value">{{ stats.total_nights }}</span>
+                <span class="stat-label">Nights</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">{{ stats.avg_duration_formatted }}</span>
+                <span class="stat-label">Avg Duration</span>
+            </div>
+            {% if stats.avg_quality %}
+            <div class="stat">
+                <span class="stat-value">{{ stats.avg_quality }}</span>
+                <span class="stat-label">Avg Quality</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Sleep List -->
+<section class="card">
+    <h2>Sleep Logs</h2>
+    {% if logs %}
+        {% for log in logs %}
+        <div class="list-item">
+            <div class="list-item-main">
+                <div class="sleep-session">
+                    <p><strong>{{ log.sleep_time|dateformat('%a, %b %d') }}</strong></p>
+                    <p class="small">
+                        Sleep: {{ log.sleep_time|time12 }}
+                        {% if log.wake_time %}
+                            → Wake: {{ log.wake_time|time12 }}
+                        {% else %}
+                            → (still sleeping)
+                        {% endif %}
+                    </p>
+                    {% if log.wake_time %}
+                        {% set duration = (log.wake_time|dateformat('%s')|int - log.sleep_time|dateformat('%s')|int) / 3600 %}
+                        <p class="small muted">Duration: {{ "%.1f"|format(duration) }} hours</p>
+                    {% endif %}
+                    {% if log.quality %}
+                        <p class="small">Quality: {{ log.quality }}/10</p>
+                    {% endif %}
+                    {% if log.notes %}
+                        <p class="small muted">{{ log.notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="list-item-actions">
+                <a href="{{ url_for('sleep_edit', sleep_id=log.id) }}" class="btn btn-small">Edit</a>
+                <form action="{{ url_for('sleep_delete', sleep_id=log.id) }}" method="post" class="inline-form" onsubmit="return confirm('Delete this sleep record?');">
+                    <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No sleep logs found for this period.</p>
+    {% endif %}
+</section>
+{% endblock %}

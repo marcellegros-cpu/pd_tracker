@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Set Schedule - {{ medication.name }} - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Set Schedule</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('schedules') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<section class="card">
+    <h2>{{ medication.name }}{% if medication.dosage %} ({{ medication.dosage }}){% endif %}</h2>
+
+    <form action="{{ url_for('schedule_add', med_id=medication.id) }}" method="post" id="schedule-form">
+
+        <!-- Schedule Type -->
+        <div class="form-group">
+            <label for="schedule_type">Schedule Type</label>
+            <select name="schedule_type" id="schedule_type" class="form-control" onchange="showOptions()">
+                <option value="">-- Select Schedule Type --</option>
+                <option value="on_wake" {% if existing and existing.schedule_type == 'on_wake' %}selected{% endif %}>
+                    Once on waking
+                </option>
+                <option value="interval_from_wake" {% if existing and existing.schedule_type == 'interval_from_wake' %}selected{% endif %}>
+                    Every X hours after waking (e.g., Levodopa)
+                </option>
+                <option value="mid_day" {% if existing and existing.schedule_type == 'mid_day' %}selected{% endif %}>
+                    Once mid-day
+                </option>
+                <option value="night_wake" {% if existing and existing.schedule_type == 'night_wake' %}selected{% endif %}>
+                    If waking at night
+                </option>
+                <option value="monthly_injection" {% if existing and existing.schedule_type == 'monthly_injection' %}selected{% endif %}>
+                    Injection every X months
+                </option>
+                <option value="fixed" {% if existing and existing.schedule_type == 'fixed' %}selected{% endif %}>
+                    Fixed daily times
+                </option>
+                <option value="prn" {% if existing and existing.schedule_type == 'prn' %}selected{% endif %}>
+                    As needed (no reminders)
+                </option>
+            </select>
+        </div>
+
+        <!-- Interval Options (shown for interval_from_wake) -->
+        <div id="interval-options" class="schedule-options" style="display: none;">
+            <div class="form-group">
+                <label for="interval_hours">Take every...</label>
+                <select name="interval_hours" id="interval_hours" class="form-control">
+                    {% for hours in interval_options %}
+                    <option value="{{ hours }}"
+                        {% if existing and existing.times_data.get('interval_hours') == hours %}selected{% endif %}
+                        {% if hours == 4.0 and not existing %}selected{% endif %}>
+                        {% if hours == hours|int %}{{ hours|int }} hours{% else %}{{ hours }} hours{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="form-text">First dose when you wake, then every X hours until sleep.</small>
+            </div>
+        </div>
+
+        <!-- Monthly Options (shown for monthly_injection) -->
+        <div id="monthly-options" class="schedule-options" style="display: none;">
+            <div class="form-group">
+                <label for="months">Every how many months?</label>
+                <select name="months" id="months" class="form-control">
+                    {% for m in range(1, 7) %}
+                    <option value="{{ m }}" {% if existing and existing.times_data.get('months') == m %}selected{% endif %}>
+                        {{ m }} month{% if m > 1 %}s{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Fixed Times Options -->
+        <div id="fixed-options" class="schedule-options" style="display: none;">
+            <div class="form-group">
+                <label>Fixed Times</label>
+                <div id="fixed-times-container">
+                    {% if existing and existing.schedule_type == 'fixed' and existing.times_data.get('times') %}
+                        {% for t in existing.times_data.get('times', []) %}
+                        <input type="time" name="fixed_times" class="form-control time-input" value="{{ t }}">
+                        {% endfor %}
+                    {% else %}
+                        <input type="time" name="fixed_times" class="form-control time-input" value="08:00">
+                    {% endif %}
+                </div>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addTimeField()">+ Add Time</button>
+            </div>
+        </div>
+
+        <!-- Reminders Toggle -->
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="reminders_enabled" value="1"
+                    {% if not existing or existing.reminders_enabled %}checked{% endif %}>
+                Enable SMS reminders
+            </label>
+            <small class="form-text">Get SMS reminders 5 minutes before each dose.</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large btn-block">Save Schedule</button>
+    </form>
+</section>
+
+<!-- Info Card -->
+<section class="card">
+    <h2>Schedule Types Explained</h2>
+    <dl class="info-list">
+        <dt>Once on waking</dt>
+        <dd>Reminder sent immediately when you log waking up.</dd>
+
+        <dt>Every X hours after waking</dt>
+        <dd>Best for Levodopa. First dose when you wake, then reminders every X hours until you log sleep. Example: Wake at 7am with 4-hour interval = doses at 7am, 11am, 3pm, 7pm, 11pm...</dd>
+
+        <dt>Once mid-day</dt>
+        <dd>Reminder approximately 6 hours after waking.</dd>
+
+        <dt>If waking at night</dt>
+        <dd>For medications to take if you wake during the night.</dd>
+
+        <dt>Injection every X months</dt>
+        <dd>For periodic injections. Tracks when next dose is due.</dd>
+
+        <dt>Fixed daily times</dt>
+        <dd>Reminders at specific clock times (not based on wake time).</dd>
+
+        <dt>As needed (PRN)</dt>
+        <dd>No automatic reminders. Log doses when you take them.</dd>
+    </dl>
+</section>
+
+<script>
+function showOptions() {
+    // Hide all options first
+    document.querySelectorAll('.schedule-options').forEach(el => el.style.display = 'none');
+
+    // Show relevant options based on selection
+    const scheduleType = document.getElementById('schedule_type').value;
+
+    if (scheduleType === 'interval_from_wake') {
+        document.getElementById('interval-options').style.display = 'block';
+    } else if (scheduleType === 'monthly_injection') {
+        document.getElementById('monthly-options').style.display = 'block';
+    } else if (scheduleType === 'fixed') {
+        document.getElementById('fixed-options').style.display = 'block';
+    }
+}
+
+function addTimeField() {
+    const container = document.getElementById('fixed-times-container');
+    const input = document.createElement('input');
+    input.type = 'time';
+    input.name = 'fixed_times';
+    input.className = 'form-control time-input';
+    container.appendChild(input);
+}
+
+// Show options on page load if editing existing schedule
+document.addEventListener('DOMContentLoaded', showOptions);
+</script>
+{% endblock %}

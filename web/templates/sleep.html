@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Sleep - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Sleep</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('sleep_manual') }}" class="btn btn-secondary">Manual Entry</a>
+        <a href="{{ url_for('sleep_history') }}" class="btn btn-secondary">History</a>
+    </div>
+</div>
+
+<!-- Current Status / Actions -->
+<section class="card">
+    {% if open_record %}
+        <h2>Currently Sleeping</h2>
+        <p class="sleep-status sleeping">Started at {{ open_record.sleep_time|time12 }}</p>
+
+        <form action="{{ url_for('sleep_wake') }}" method="post">
+            <div class="form-group">
+                <label>Sleep Quality (1-10)</label>
+                <input type="range" name="quality" min="1" max="10" value="5" class="range-input" id="quality-range">
+                <span class="range-value" id="quality-value">5</span>
+            </div>
+
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" class="form-control" rows="2" placeholder="How did you sleep?"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-xlarge btn-block">Wake Up</button>
+        </form>
+    {% else %}
+        <h2>Ready for Bed?</h2>
+
+        <form action="{{ url_for('sleep_start') }}" method="post">
+            <div class="form-group">
+                <label>Notes (optional)</label>
+                <textarea name="notes" class="form-control" rows="2" placeholder="Feeling tired, etc."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-xlarge btn-block">Start Sleep</button>
+        </form>
+    {% endif %}
+</section>
+
+<!-- Last Night -->
+{% if last_sleep and not open_record %}
+<section class="card">
+    <h2>Last Sleep</h2>
+    <div class="sleep-details">
+        <p><strong>{{ last_sleep.sleep_time|dateformat('%a, %b %d') }}</strong></p>
+        <p>{{ last_sleep.sleep_time|time12 }} - {{ last_sleep.wake_time|time12 }}</p>
+        {% if last_sleep.quality %}
+            <p>Quality: <strong>{{ last_sleep.quality }}/10</strong></p>
+        {% endif %}
+        {% if last_sleep.notes %}
+            <p class="notes">{{ last_sleep.notes }}</p>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Weekly Stats -->
+{% if stats.total_nights > 0 %}
+<section class="card">
+    <h2>Last 7 Days</h2>
+    <div class="stats-row">
+        <div class="stat">
+            <span class="stat-value">{{ stats.total_nights }}</span>
+            <span class="stat-label">Nights</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ stats.avg_duration_formatted }}</span>
+            <span class="stat-label">Avg Duration</span>
+        </div>
+        {% if stats.avg_quality %}
+        <div class="stat">
+            <span class="stat-value">{{ stats.avg_quality }}</span>
+            <span class="stat-label">Avg Quality</span>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<script>
+document.querySelectorAll('.range-input').forEach(function(input) {
+    input.addEventListener('input', function() {
+        var valueSpan = this.nextElementSibling;
+        if (valueSpan && valueSpan.classList.contains('range-value')) {
+            valueSpan.textContent = this.value;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PD Tracker{% endblock %}
+
+{% block content %}
+<h1>Today's Overview</h1>
+
+<!-- Wake/Sleep Status - MOST IMPORTANT FOR MEDICATION SCHEDULING -->
+<section class="card wake-status-card">
+    <h2>Medication Schedule Status</h2>
+    {% if is_awake %}
+        <div class="wake-status awake">
+            <span class="status-icon">&#9728;</span>
+            <span>Awake since {{ wake_status.event_time.strftime('%I:%M %p').lstrip('0') }}</span>
+        </div>
+        <p class="small muted">Medication reminders are active.</p>
+        <form action="{{ url_for('log_going_to_sleep') }}" method="post">
+            <input type="hidden" name="next" value="{{ url_for('dashboard') }}">
+            <button type="submit" class="btn btn-secondary btn-block">Going to Sleep</button>
+        </form>
+    {% else %}
+        <div class="wake-status asleep">
+            <span class="status-icon">&#9728;&#65039;</span>
+            <span>Not yet awake today</span>
+        </div>
+        <p class="small muted">Log waking to start your medication reminders.</p>
+        <form action="{{ url_for('log_wake') }}" method="post">
+            <input type="hidden" name="next" value="{{ url_for('dashboard') }}">
+            <button type="submit" class="btn btn-primary btn-large btn-block">I'm Awake!</button>
+        </form>
+    {% endif %}
+</section>
+
+<!-- Quick Actions -->
+<section class="card">
+    <h2>Quick Log</h2>
+    <div class="quick-actions">
+        {% if med_status %}
+        <form action="{{ url_for('take_med_form') }}" method="post" class="inline-form">
+            <select name="med_id" class="select-med">
+                {% for med in med_status %}
+                <option value="{{ med.id }}">{{ med.name }}{% if med.dosage %} ({{ med.dosage }}){% endif %}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary btn-large">Take Med</button>
+        </form>
+        {% endif %}
+
+        <div class="btn-row">
+            <form action="{{ url_for('symptom_quick', state='on') }}" method="post" class="inline-form">
+                <button type="submit" class="btn btn-success">ON</button>
+            </form>
+            <form action="{{ url_for('symptom_quick', state='off') }}" method="post" class="inline-form">
+                <button type="submit" class="btn btn-danger">OFF</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Medication Status -->
+<section class="card">
+    <h2>Medications</h2>
+    {% if med_status %}
+        {% for med in med_status %}
+        <div class="status-item">
+            <div class="status-name">
+                <strong>{{ med.name }}</strong>
+                {% if med.dosage %}<span class="muted">({{ med.dosage }})</span>{% endif %}
+            </div>
+            <div class="status-details">
+                <span class="badge">{{ med.doses_today }} today</span>
+                {% if med.last_dose_time %}
+                    <span class="muted">Last: {{ med.last_dose_time|time12 }}</span>
+                {% else %}
+                    <span class="muted">Not taken yet</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No medications set up.</p>
+    {% endif %}
+    <a href="{{ url_for('meds') }}" class="btn btn-link">View All</a>
+</section>
+
+<!-- Symptom Status -->
+<section class="card">
+    <h2>Symptoms</h2>
+    <div class="stats-row">
+        <div class="stat">
+            <span class="stat-value">{{ symptom_summary.on }}</span>
+            <span class="stat-label">ON</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ symptom_summary.off }}</span>
+            <span class="stat-label">OFF</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ symptom_summary.total_entries }}</span>
+            <span class="stat-label">Total</span>
+        </div>
+    </div>
+    {% if symptom_summary.last_state %}
+        <p>Last: <strong>{{ symptom_summary.last_state|upper }}</strong> at {{ symptom_summary.last_time|time12 }}</p>
+    {% endif %}
+    <a href="{{ url_for('symptoms') }}" class="btn btn-link">Log Symptoms</a>
+</section>
+
+<!-- Sleep Status -->
+<section class="card">
+    <h2>Sleep</h2>
+    {% if open_sleep %}
+        <p class="sleep-status sleeping">Currently sleeping</p>
+        <p class="muted">Started: {{ open_sleep.sleep_time|time12 }}</p>
+        <form action="{{ url_for('sleep_wake') }}" method="post">
+            <div class="form-group">
+                <label>Quality (1-10)</label>
+                <input type="range" name="quality" min="1" max="10" value="5" class="range-input">
+            </div>
+            <button type="submit" class="btn btn-primary">Wake Up</button>
+        </form>
+    {% elif last_sleep %}
+        <p>Last sleep: {{ last_sleep.wake_time|dateformat('%a, %b %d') }}</p>
+        <p class="muted">Quality: {{ last_sleep.quality }}/10</p>
+    {% else %}
+        <p class="muted">No sleep logged yet.</p>
+    {% endif %}
+    <a href="{{ url_for('sleep') }}" class="btn btn-link">Sleep Details</a>
+</section>
+
+<!-- Exercise Status -->
+<section class="card">
+    <h2>Exercise</h2>
+    {% if exercise_stats.sessions > 0 %}
+        <p><strong>{{ exercise_stats.total_minutes }} minutes</strong> today</p>
+        <p class="muted">{{ exercise_stats.sessions }} session(s): {{ exercise_stats.types|join(', ') }}</p>
+    {% else %}
+        <p class="muted">No exercise logged today.</p>
+    {% endif %}
+    <a href="{{ url_for('exercise') }}" class="btn btn-link">Log Exercise</a>
+</section>
+{% endblock %}

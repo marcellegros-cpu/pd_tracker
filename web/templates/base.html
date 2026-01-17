@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>{% block title %}PD Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="nav">
+        <a href="{{ url_for('dashboard') }}" class="nav-brand">PD Tracker</a>
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">Home</a>
+            <a href="{{ url_for('meds') }}" class="{% if 'meds' in request.endpoint and 'schedule' not in request.endpoint %}active{% endif %}">Meds</a>
+            <a href="{{ url_for('schedules') }}" class="{% if 'schedule' in request.endpoint %}active{% endif %}">Schedules</a>
+            <a href="{{ url_for('symptoms') }}" class="{% if 'symptom' in request.endpoint %}active{% endif %}">Symptoms</a>
+            <a href="{{ url_for('sleep') }}" class="{% if 'sleep' in request.endpoint %}active{% endif %}">Sleep</a>
+            <a href="{{ url_for('exercise') }}" class="{% if 'exercise' in request.endpoint %}active{% endif %}">Exercise</a>
+            <a href="{{ url_for('visualizations') }}" class="{% if 'vis' in request.endpoint %}active{% endif %}">Charts</a>
+            <a href="{{ url_for('reports') }}" class="{% if 'report' in request.endpoint %}active{% endif %}">Reports</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>{{ now.strftime('%I:%M %p').lstrip('0') }} - {{ now.strftime('%a, %b %d') }}</p>
+    </footer>
+</body>
+</html>

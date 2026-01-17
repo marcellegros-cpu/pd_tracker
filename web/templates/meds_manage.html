@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Medications - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Manage Medications</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('meds_add') }}" class="btn btn-primary">Add Medication</a>
+        <a href="{{ url_for('meds') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<section class="card">
+    <h2>All Medications</h2>
+    {% if medications %}
+        {% for med in medications %}
+        <div class="list-item {% if not med.active %}inactive{% endif %}">
+            <div class="list-item-main">
+                <strong>{{ med.name }}</strong>
+                {% if med.dosage %}<span class="muted">({{ med.dosage }})</span>{% endif %}
+                {% if med.instructions %}<p class="small">{{ med.instructions }}</p>{% endif %}
+            </div>
+            <div class="list-item-actions">
+                {% if med.active %}
+                    <span class="badge badge-success">Active</span>
+                {% else %}
+                    <span class="badge badge-muted">Inactive</span>
+                {% endif %}
+                <a href="{{ url_for('meds_edit', med_id=med.id) }}" class="btn btn-small">Edit</a>
+                {% if med.active %}
+                <form action="{{ url_for('meds_delete', med_id=med.id) }}" method="post" class="inline-form" onsubmit="return confirm('Deactivate this medication? History will be preserved.');">
+                    <button type="submit" class="btn btn-small btn-danger">Deactivate</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No medications found.</p>
+    {% endif %}
+</section>
+{% endblock %}

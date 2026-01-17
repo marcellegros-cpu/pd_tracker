@@ -1,0 +1,16 @@
+[Unit]
+Description=PD Tracker Reminder Service
+After=network.target
+
+[Service]
+Type=simple
+User=marcel
+WorkingDirectory=/mnt/Storage/pd_tracker
+Environment="PATH=/mnt/Storage/pd_tracker/venv/bin:/usr/bin"
+EnvironmentFile=/home/marcel/.pd_tracker_env
+ExecStart=/mnt/Storage/pd_tracker/venv/bin/python -m pd_tracker.scheduler
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Symptom - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Edit Symptom Entry</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('symptoms_history') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<section class="card">
+    <form action="{{ url_for('symptom_edit', symptom_id=symptom.id) }}" method="post">
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" class="form-control"
+                   value="{{ symptom.timestamp[:10] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="time">Time</label>
+            <input type="time" id="time" name="time" class="form-control"
+                   value="{{ symptom.timestamp[11:16] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="on_off_state">State</label>
+            <select id="on_off_state" name="on_off_state" class="form-control">
+                <option value="">Not specified</option>
+                <option value="on" {% if symptom.on_off_state == 'on' %}selected{% endif %}>ON</option>
+                <option value="off" {% if symptom.on_off_state == 'off' %}selected{% endif %}>OFF</option>
+                <option value="transitioning" {% if symptom.on_off_state == 'transitioning' %}selected{% endif %}>Transitioning</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="severity">Overall Severity (0-10)</label>
+            <input type="number" id="severity" name="severity" class="form-control"
+                   min="0" max="10" value="{{ symptom.severity or 0 }}">
+        </div>
+
+        <h3>Individual Symptoms (0-10)</h3>
+
+        <div class="form-group">
+            <label for="tremor">Tremor</label>
+            <input type="number" id="tremor" name="tremor" class="form-control"
+                   min="0" max="10" value="{{ symptom.tremor or 0 }}">
+        </div>
+
+        <div class="form-group">
+            <label for="rigidity">Rigidity</label>
+            <input type="number" id="rigidity" name="rigidity" class="form-control"
+                   min="0" max="10" value="{{ symptom.rigidity or 0 }}">
+        </div>
+
+        <div class="form-group">
+            <label for="bradykinesia">Bradykinesia</label>
+            <input type="number" id="bradykinesia" name="bradykinesia" class="form-control"
+                   min="0" max="10" value="{{ symptom.bradykinesia or 0 }}">
+        </div>
+
+        <div class="form-group">
+            <label for="dyskinesia">Dyskinesia</label>
+            <input type="number" id="dyskinesia" name="dyskinesia" class="form-control"
+                   min="0" max="10" value="{{ symptom.dyskinesia or 0 }}">
+        </div>
+
+        <div class="form-group">
+            <label for="freezing">Freezing</label>
+            <input type="number" id="freezing" name="freezing" class="form-control"
+                   min="0" max="10" value="{{ symptom.freezing or 0 }}">
+        </div>
+
+        <div class="form-group">
+            <label for="balance">Balance Issues</label>
+            <input type="number" id="balance" name="balance" class="form-control"
+                   min="0" max="10" value="{{ symptom.balance or 0 }}">
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" class="form-control" rows="3">{{ symptom.notes or '' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large btn-block">Update Symptom</button>
+    </form>
+</section>
+{% endblock %}

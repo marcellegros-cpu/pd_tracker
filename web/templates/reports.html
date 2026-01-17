@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Export - PD Tracker{% endblock %}
+
+{% block content %}
+<h1>Reports & Export</h1>
+
+<section class="card">
+    <h2>Generate Report</h2>
+    <p>Create a comprehensive report of your tracking data.</p>
+
+    <form action="{{ url_for('reports_generate') }}" method="post">
+        <div class="form-group">
+            <label for="format">Format</label>
+            <select name="format" id="format" class="form-control">
+                <option value="pdf">PDF Report</option>
+                <option value="excel">Excel Spreadsheet</option>
+                <option value="csv">CSV Data</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="days">Period</label>
+            <select name="days" id="days" class="form-control">
+                <option value="7">Last 7 days</option>
+                <option value="14">Last 14 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large btn-block">Generate Report</button>
+    </form>
+</section>
+
+<section class="card">
+    <h2>What's Included</h2>
+    <ul>
+        <li><strong>Medications:</strong> Adherence tracking, dose history, timing patterns</li>
+        <li><strong>Symptoms:</strong> ON/OFF state summary, severity trends, individual symptom tracking</li>
+        <li><strong>Sleep:</strong> Duration, quality, patterns over time</li>
+        <li><strong>Exercise:</strong> Activity logs, duration, intensity breakdown</li>
+    </ul>
+</section>
+
+<section class="card">
+    <h2>Generated Files</h2>
+    <p class="muted">Reports are saved to the <code>exports/</code> directory.</p>
+    <p class="small">
+        PDF reports include charts and summaries for easy sharing with healthcare providers.
+        Excel/CSV exports provide raw data for further analysis.
+    </p>
+</section>
+{% endblock %}

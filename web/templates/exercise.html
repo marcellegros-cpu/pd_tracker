@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Exercise - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Exercise</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('exercise_history') }}" class="btn btn-secondary">History</a>
+    </div>
+</div>
+
+<!-- Log Exercise Form -->
+<section class="card">
+    <h2>Log Exercise</h2>
+    <form action="{{ url_for('exercise_log') }}" method="post">
+        <div class="form-group">
+            <label>Exercise Type</label>
+            <select name="exercise_type" class="form-control" id="exercise-type">
+                {% for ex in exercise_types %}
+                <option value="{{ ex }}">{{ ex }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" id="custom-type-group" style="display: none;">
+            <label>Custom Type</label>
+            <input type="text" name="custom_type" class="form-control" placeholder="Enter exercise type">
+        </div>
+
+        <div class="form-group">
+            <label>Duration (minutes)</label>
+            <div class="duration-buttons">
+                <button type="button" class="btn btn-outline duration-btn" data-value="15">15</button>
+                <button type="button" class="btn btn-outline duration-btn" data-value="30">30</button>
+                <button type="button" class="btn btn-outline duration-btn" data-value="45">45</button>
+                <button type="button" class="btn btn-outline duration-btn" data-value="60">60</button>
+            </div>
+            <input type="number" name="duration" class="form-control" id="duration-input" value="30" min="1" max="300">
+        </div>
+
+        <div class="form-group">
+            <label>Intensity</label>
+            <div class="intensity-buttons">
+                <label class="radio-btn">
+                    <input type="radio" name="intensity" value="light"> Light
+                </label>
+                <label class="radio-btn checked">
+                    <input type="radio" name="intensity" value="moderate" checked> Moderate
+                </label>
+                <label class="radio-btn">
+                    <input type="radio" name="intensity" value="vigorous"> Vigorous
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="How did it go?"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-large">Log Exercise</button>
+    </form>
+</section>
+
+<!-- Today's Stats -->
+<section class="card">
+    <h2>Today</h2>
+    {% if stats.sessions > 0 %}
+        <div class="stats-row">
+            <div class="stat">
+                <span class="stat-value">{{ stats.total_minutes }}</span>
+                <span class="stat-label">Minutes</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">{{ stats.sessions }}</span>
+                <span class="stat-label">Sessions</span>
+            </div>
+        </div>
+
+        <h3>Sessions</h3>
+        {% for ex in exercises %}
+        <div class="history-item">
+            <div class="history-time">{{ ex.start_time|time12 }}</div>
+            <div class="history-details">
+                <strong>{{ ex.exercise_type }}</strong>
+                <span class="badge">{{ ex.duration_minutes }} min</span>
+                <span class="badge badge-{{ ex.intensity }}">{{ ex.intensity }}</span>
+                {% if ex.notes %}
+                    <p class="notes">{{ ex.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No exercise logged today. Get moving!</p>
+    {% endif %}
+</section>
+
+<script>
+// Show/hide custom type input
+document.getElementById('exercise-type').addEventListener('change', function() {
+    var customGroup = document.getElementById('custom-type-group');
+    customGroup.style.display = this.value === 'Other' ? 'block' : 'none';
+});
+
+// Duration quick buttons
+document.querySelectorAll('.duration-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.getElementById('duration-input').value = this.dataset.value;
+        document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+// Radio button styling
+document.querySelectorAll('.radio-btn input').forEach(function(input) {
+    input.addEventListener('change', function() {
+        document.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('checked'));
+        this.parentElement.classList.add('checked');
+    });
+});
+</script>
+{% endblock %}

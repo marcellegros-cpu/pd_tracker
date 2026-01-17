@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Visualizations - PD Tracker{% endblock %}
+
+{% block content %}
+<h1>Visualizations & Analytics</h1>
+
+<section class="card">
+    <h2>Medication Compliance vs Symptoms</h2>
+    <p>View correlations between medication compliance and symptom patterns over time.</p>
+    <div class="btn-row">
+        <a href="{{ url_for('vis_correlation', view='weekly', days=7) }}" class="btn btn-primary">Weekly View (7 days)</a>
+        <a href="{{ url_for('vis_correlation', view='hourly', days=3) }}" class="btn btn-primary">Hourly View (3 days)</a>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Custom Analysis</h2>
+    <form action="{{ url_for('vis_correlation') }}" method="get">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="view">View Type</label>
+                <select name="view" id="view" class="form-control">
+                    <option value="weekly">Daily (Weekly)</option>
+                    <option value="hourly">Hourly</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="days">Days</label>
+                <select name="days" id="days" class="form-control">
+                    <option value="3">3 days</option>
+                    <option value="7" selected>7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30">30 days</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-secondary btn-block">View Chart</button>
+    </form>
+</section>
+{% endblock %}

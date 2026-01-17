@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Schedules - PD Tracker{% endblock %}
+
+{% block content %}
+<h1>Medication Schedules</h1>
+
+<!-- Wake/Sleep Status -->
+<section class="card wake-status-card">
+    <h2>Wake Status</h2>
+    {% if is_awake %}
+        <div class="wake-status awake">
+            <span class="status-icon">&#9728;</span>
+            <span>You're awake since {{ wake_status.event_time.strftime('%I:%M %p').lstrip('0') }}</span>
+        </div>
+        <p class="small muted">Medication reminders are active.</p>
+        <form action="{{ url_for('log_going_to_sleep') }}" method="post">
+            <input type="hidden" name="next" value="{{ url_for('schedules') }}">
+            <button type="submit" class="btn btn-secondary btn-block">Going to Sleep</button>
+        </form>
+    {% else %}
+        <div class="wake-status asleep">
+            <span class="status-icon">&#9790;</span>
+            <span>Not yet awake today</span>
+        </div>
+        <p class="small muted">Log waking to start medication reminders.</p>
+        <form action="{{ url_for('log_wake') }}" method="post">
+            <input type="hidden" name="next" value="{{ url_for('schedules') }}">
+            <button type="submit" class="btn btn-primary btn-large btn-block">I'm Awake!</button>
+        </form>
+    {% endif %}
+</section>
+
+<!-- Medication Schedules -->
+<section class="card">
+    <h2>Medication Schedules</h2>
+    {% if schedules %}
+        {% for item in schedules %}
+        <div class="list-item">
+            <div class="list-item-main">
+                <strong>{{ item.medication.name }}</strong>
+                {% if item.medication.dosage %}<span class="muted">({{ item.medication.dosage }})</span>{% endif %}
+                <p class="small">{{ item.formatted }}</p>
+                {% if item.schedule %}
+                    {% if item.schedule.reminders_enabled %}
+                        <span class="badge badge-success">Reminders ON</span>
+                    {% else %}
+                        <span class="badge badge-muted">Reminders OFF</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="list-item-actions">
+                <a href="{{ url_for('schedule_add', med_id=item.medication.id) }}" class="btn btn-small btn-primary">
+                    {% if item.schedule %}Edit{% else %}Set{% endif %}
+                </a>
+                {% if item.schedule %}
+                <form action="{{ url_for('schedule_toggle_reminders', med_id=item.medication.id) }}" method="post" class="inline-form">
+                    {% if item.schedule.reminders_enabled %}
+                        <input type="hidden" name="enabled" value="0">
+                        <button type="submit" class="btn btn-small btn-secondary">Mute</button>
+                    {% else %}
+                        <input type="hidden" name="enabled" value="1">
+                        <button type="submit" class="btn btn-small btn-success">Enable</button>
+                    {% endif %}
+                </form>
+                <form action="{{ url_for('schedule_delete', med_id=item.medication.id) }}" method="post" class="inline-form" onsubmit="return confirm('Remove this schedule?');">
+                    <button type="submit" class="btn btn-small btn-danger">Remove</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No medications found. <a href="{{ url_for('meds_add') }}">Add a medication</a> first.</p>
+    {% endif %}
+</section>
+
+<!-- Quick Info -->
+<section class="card">
+    <h2>How Schedules Work</h2>
+    <ul class="info-list">
+        <li><strong>Wake-based:</strong> Log "I'm Awake" to start your medication schedule. Reminders are calculated from your wake time.</li>
+        <li><strong>Interval:</strong> For medications like Levodopa, set an interval (e.g., every 4 hours). First dose reminder comes when you wake, then every interval after.</li>
+        <li><strong>Reminders:</strong> You'll get SMS reminders 5 minutes before each dose. If you don't log the dose within 15 minutes, you'll get a follow-up reminder.</li>
+        <li><strong>Sleep:</strong> When you log "Going to Sleep", reminders pause until you wake again.</li>
+    </ul>
+</section>
+{% endblock %}

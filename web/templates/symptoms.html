@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Symptoms - PD Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Symptoms</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('symptoms_history') }}" class="btn btn-secondary">History</a>
+    </div>
+</div>
+
+<!-- Quick State Buttons -->
+<section class="card">
+    <h2>Current State</h2>
+    <div class="btn-row btn-row-large">
+        <form action="{{ url_for('symptom_quick', state='on') }}" method="post" class="inline-form">
+            <button type="submit" class="btn btn-success btn-xlarge">ON</button>
+        </form>
+        <form action="{{ url_for('symptom_quick', state='off') }}" method="post" class="inline-form">
+            <button type="submit" class="btn btn-danger btn-xlarge">OFF</button>
+        </form>
+        <form action="{{ url_for('symptom_quick', state='trans') }}" method="post" class="inline-form">
+            <button type="submit" class="btn btn-warning btn-xlarge">TRANS</button>
+        </form>
+    </div>
+</section>
+
+<!-- Today's Summary -->
+<section class="card">
+    <h2>Today</h2>
+    <div class="stats-row">
+        <div class="stat">
+            <span class="stat-value stat-on">{{ summary.on }}</span>
+            <span class="stat-label">ON</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value stat-off">{{ summary.off }}</span>
+            <span class="stat-label">OFF</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">{{ summary.transitioning }}</span>
+            <span class="stat-label">Trans</span>
+        </div>
+    </div>
+    {% if summary.last_state %}
+        <p class="current-state">
+            Currently: <strong class="state-{{ summary.last_state }}">{{ summary.last_state|upper }}</strong>
+            <span class="muted">({{ summary.last_time|time12 }})</span>
+        </p>
+    {% endif %}
+</section>
+
+<!-- Detailed Log Form -->
+<section class="card">
+    <h2>Detailed Log</h2>
+    <form action="{{ url_for('symptom_log') }}" method="post">
+        <div class="form-group">
+            <label>State</label>
+            <select name="on_off_state" class="form-control">
+                <option value="">-- Select --</option>
+                <option value="on">ON</option>
+                <option value="off">OFF</option>
+                <option value="transitioning">Transitioning</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Overall Severity (1-10)</label>
+            <input type="range" name="severity" min="0" max="10" value="0" class="range-input" id="severity-range">
+            <span class="range-value" id="severity-value">0</span>
+        </div>
+
+        <h3>Individual Symptoms (0-10)</h3>
+
+        <div class="form-group">
+            <label>Tremor</label>
+            <input type="range" name="tremor" min="0" max="10" value="0" class="range-input symptom-range">
+        </div>
+
+        <div class="form-group">
+            <label>Rigidity</label>
+            <input type="range" name="rigidity" min="0" max="10" value="0" class="range-input symptom-range">
+        </div>
+
+        <div class="form-group">
+            <label>Bradykinesia (slowness)</label>
+            <input type="range" name="bradykinesia" min="0" max="10" value="0" class="range-input symptom-range">
+        </div>
+
+        <div class="form-group">
+            <label>Dyskinesia</label>
+            <input type="range" name="dyskinesia" min="0" max="10" value="0" class="range-input symptom-range">
+        </div>
+
+        <div class="form-group">
+            <label>Freezing</label>
+            <input type="range" name="freezing" min="0" max="10" value="0" class="range-input symptom-range">
+        </div>
+
+        <div class="form-group">
+            <label>Balance</label>
+            <input type="range" name="balance" min="0" max="10" value="0" class="range-input symptom-range">
+        </div>
+
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Log Symptoms</button>
+    </form>
+</section>
+
+<!-- Recent Entries -->
+{% if symptoms %}
+<section class="card">
+    <h2>Today's Entries</h2>
+    {% for s in symptoms %}
+    <div class="history-item">
+        <div class="history-time">{{ s.timestamp|time12 }}</div>
+        <div class="history-details">
+            {% if s.on_off_state %}
+                <span class="badge state-{{ s.on_off_state }}">{{ s.on_off_state|upper }}</span>
+            {% endif %}
+            {% if s.severity %}
+                <span class="muted">Severity: {{ s.severity }}/10</span>
+            {% endif %}
+            {% if s.notes %}
+                <p class="notes">{{ s.notes }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+
+<script>
+// Update range value displays
+document.querySelectorAll('.range-input').forEach(function(input) {
+    input.addEventListener('input', function() {
+        var valueSpan = this.nextElementSibling;
+        if (valueSpan && valueSpan.classList.contains('range-value')) {
+            valueSpan.textContent = this.value;
+        }
+    });
+});
+</script>
+{% endblock %}
