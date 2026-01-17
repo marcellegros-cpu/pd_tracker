@@ -208,6 +208,36 @@ def get_sleep_logs(days: int = 7) -> list:
     return records
 
 
+def get_sleep_range(start_date: date, end_date: date) -> list:
+    """
+    Get sleep logs for a specific date range.
+
+    Args:
+        start_date: Start of date range (inclusive)
+        end_date: End of date range (inclusive)
+
+    Returns:
+        List of sleep records within the range, most recent first
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    start_dt = datetime.combine(start_date, datetime.min.time())
+    end_dt = datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+
+    cursor.execute(
+        """SELECT * FROM sleep_logs
+           WHERE sleep_time >= ? AND sleep_time < ?
+           ORDER BY sleep_time DESC""",
+        (start_dt, end_dt)
+    )
+
+    records = cursor.fetchall()
+    conn.close()
+
+    return records
+
+
 def get_sleep_by_id(sleep_id: int) -> Optional[dict]:
     """
     Get a sleep record by its ID.

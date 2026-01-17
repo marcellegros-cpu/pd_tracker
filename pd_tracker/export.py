@@ -29,8 +29,8 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from .database import get_connection
 from .models import get_medication_status_today, get_all_medications
 from .symptoms import get_symptoms_range
-from .sleep import get_sleep_logs, get_sleep_stats
-from .exercise import get_exercise_logs, get_exercise_stats
+from .sleep import get_sleep_logs, get_sleep_stats, get_sleep_range
+from .exercise import get_exercise_logs, get_exercise_stats, get_exercise_range
 
 
 # Default export directory
@@ -73,8 +73,8 @@ def get_all_data(start_date: date, end_date: date) -> dict:
     return {
         'medications': get_medication_history(start_date, end_date),
         'symptoms': [dict(s) for s in get_symptoms_range(start_date, end_date)],
-        'sleep': [dict(s) for s in get_sleep_logs((end_date - start_date).days + 1)],
-        'exercise': [dict(e) for e in get_exercise_logs((end_date - start_date).days + 1)],
+        'sleep': [dict(s) for s in get_sleep_range(start_date, end_date)],
+        'exercise': [dict(e) for e in get_exercise_range(start_date, end_date)],
     }
 
 

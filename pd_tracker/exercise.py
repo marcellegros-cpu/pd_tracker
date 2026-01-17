@@ -137,6 +137,36 @@ def get_exercise_logs(days: int = 7) -> list:
     return records
 
 
+def get_exercise_range(start_date: date, end_date: date) -> list:
+    """
+    Get exercise logs for a specific date range.
+
+    Args:
+        start_date: Start of date range (inclusive)
+        end_date: End of date range (inclusive)
+
+    Returns:
+        List of exercise records within the range, most recent first
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    start_dt = datetime.combine(start_date, datetime.min.time())
+    end_dt = datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+
+    cursor.execute(
+        """SELECT * FROM exercise_logs
+           WHERE start_time >= ? AND start_time < ?
+           ORDER BY start_time DESC""",
+        (start_dt, end_dt)
+    )
+
+    records = cursor.fetchall()
+    conn.close()
+
+    return records
+
+
 def get_exercise_by_id(exercise_id: int) -> Optional[dict]:
     """
     Get an exercise record by its ID.

@@ -455,6 +455,17 @@ def generate_wake_based_reminders(wake_time: datetime):
 
     This is called when the user logs waking up.
     It creates reminder entries for all wake-based schedules.
+
+    Schedule types handled:
+    - on_wake: Immediate reminder
+    - interval_from_wake: First dose now, then every X hours
+    - mid_day: 6 hours after wake
+    - fixed: Specific clock times (e.g., 8 AM, 2 PM)
+
+    NOT handled here (different reminder models):
+    - night_wake: Triggered by separate "woke at night" event
+    - monthly_injection: Uses due date tracking, not daily reminders
+    - prn: No automatic reminders (as needed)
     """
     schedules = get_all_active_schedules()
 
@@ -467,6 +478,8 @@ def generate_wake_based_reminders(wake_time: datetime):
         "DELETE FROM pending_reminders WHERE created_at >= ?",
         (today_start,)
     )
+
+    today = date.today()
 
     for sched in schedules:
         if not sched['reminders_enabled']:
@@ -493,7 +506,7 @@ def generate_wake_based_reminders(wake_time: datetime):
             _add_pending_reminder(cursor, med_id, scheduled, reminder)
 
             # Subsequent doses every interval
-            # Assume 16-hour wake window (will stop when user logs sleep)
+            # Assume 18-hour wake window (will stop when user logs sleep)
             max_wake_hours = 18
             current = wake_time + interval
             end_of_day = wake_time + timedelta(hours=max_wake_hours)
@@ -510,6 +523,25 @@ def generate_wake_based_reminders(wake_time: datetime):
             reminder = scheduled - timedelta(minutes=5)
             _add_pending_reminder(cursor, med_id, scheduled, reminder)
 
+        elif stype == 'fixed':
+            # Fixed daily times (not wake-based)
+            # Example: {"times": ["08:00", "14:00", "20:00"]}
+            times_list = data.get('times', [])
+            for time_str in times_list:
+                hour, minute = map(int, time_str.split(':'))
+                scheduled = datetime.combine(today, time(hour, minute))
+
+                # Only add if the time hasn't passed yet
+                if scheduled > wake_time:
+                    # Reminder 5 minutes before
+                    reminder = scheduled - timedelta(minutes=5)
+                    _add_pending_reminder(cursor, med_id, scheduled, reminder)
+
+        # Note: night_wake, monthly_injection, and prn are not handled here
+        # - night_wake: needs separate trigger when user logs night waking
+        # - monthly_injection: uses get_next_injection_due() for tracking
+        # - prn: no automatic reminders by design
+
     conn.commit()
     conn.close()
 
@@ -523,6 +555,89 @@ def _add_pending_reminder(cursor, medication_id: int, scheduled_time: datetime,
            VALUES (?, ?, ?)""",
         (medication_id, scheduled_time, reminder_time)
     )
+
+
+def trigger_night_wake_reminders():
+    """
+    Generate reminders for 'night_wake' schedule type.
+
+    Call this when the user logs waking up during the night
+    (distinct from their main morning wake-up).
+    """
+    schedules = get_all_active_schedules()
+    now = datetime.now()
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    for sched in schedules:
+        if not sched['reminders_enabled']:
+            continue
+
+        if sched['schedule_type'] == 'night_wake':
+            med_id = sched['medication_id']
+            # Immediate reminder for night wake medications
+            _add_pending_reminder(cursor, med_id, now, now)
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_injection_due(medication_id: int) -> Optional[date]:
+    """
+    Get the next due date for a monthly injection.
+
+    Args:
+        medication_id: The medication's database ID
+
+    Returns:
+        The date when the next injection is due, or None if no schedule
+    """
+    schedule = get_schedule(medication_id)
+    if not schedule or schedule['schedule_type'] != 'monthly_injection':
+        return None
+
+    months = schedule['times_data'].get('months', 1)
+    last_taken = schedule['times_data'].get('last_taken')
+
+    if not last_taken:
+        # Never taken - due now
+        return date.today()
+
+    # Parse last_taken date
+    if isinstance(last_taken, str):
+        last_date = date.fromisoformat(last_taken)
+    else:
+        last_date = last_taken
+
+    # Add months to get next due date
+    next_due = last_date + timedelta(days=months * 30)  # Approximate
+    return next_due
+
+
+def record_injection_taken(medication_id: int, taken_date: date = None) -> bool:
+    """
+    Record that a monthly injection was taken.
+
+    Args:
+        medication_id: The medication's database ID
+        taken_date: When it was taken (defaults to today)
+
+    Returns:
+        True if successful
+    """
+    if taken_date is None:
+        taken_date = date.today()
+
+    schedule = get_schedule(medication_id)
+    if not schedule or schedule['schedule_type'] != 'monthly_injection':
+        return False
+
+    # Update the times_data with last_taken
+    times_data = schedule['times_data'].copy()
+    times_data['last_taken'] = taken_date.isoformat()
+
+    return update_schedule(schedule['id'], times_data=times_data)
 
 
 def get_pending_reminders() -> list:
