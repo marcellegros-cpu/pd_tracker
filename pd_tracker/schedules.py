@@ -572,7 +572,8 @@ def get_overdue_reminders(minutes: int = 15) -> list:
            JOIN medications m ON pr.medication_id = m.id
            WHERE pr.sent = 1 AND pr.followup_sent = 0
              AND pr.scheduled_time <= ?
-           ORDER BY pr.scheduled_time"""
+           ORDER BY pr.scheduled_time""",
+        (cutoff,)
     )
 
     rows = cursor.fetchall()

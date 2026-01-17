@@ -487,7 +487,7 @@ def schedule_toggle_reminders(med_id):
 # ============================================================
 
 @app.route('/wake', methods=['POST'])
-def log_wake():
+def wake_event():
     """Log waking up - triggers medication schedule."""
     notes = request.form.get('notes', '').strip() or None
     log_wake_event(notes=notes)

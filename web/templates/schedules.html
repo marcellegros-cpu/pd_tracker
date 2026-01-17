@@ -24,7 +24,7 @@
             <span>Not yet awake today</span>
         </div>
         <p class="small muted">Log waking to start medication reminders.</p>
-        <form action="{{ url_for('log_wake') }}" method="post">
+        <form action="{{ url_for('wake_event') }}" method="post">
             <input type="hidden" name="next" value="{{ url_for('schedules') }}">
             <button type="submit" class="btn btn-primary btn-large btn-block">I'm Awake!</button>
         </form>
