@@ -116,22 +116,21 @@ def log_sleep_event(event_time: datetime = None, notes: str = None) -> int:
 
 def get_last_wake_event() -> Optional[dict]:
     """
-    Get the most recent wake event.
+    Get the most recent wake event (regardless of date).
+
+    This returns the last wake event even if it was yesterday,
+    which is important for handling wake periods that span midnight.
 
     Returns:
-        Dict with event details, or None if no wake logged today
+        Dict with event details, or None if no wake event exists
     """
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Get wake event from today
-    today_start = datetime.combine(date.today(), time.min)
-
     cursor.execute(
         """SELECT * FROM wake_sleep_events
-           WHERE event_type = 'wake' AND event_time >= ?
-           ORDER BY event_time DESC LIMIT 1""",
-        (today_start,)
+           WHERE event_type = 'wake'
+           ORDER BY event_time DESC LIMIT 1"""
     )
 
     row = cursor.fetchone()
@@ -196,6 +195,51 @@ def is_user_awake() -> bool:
     sleep_time = sleep['event_time']
 
     return wake_time > sleep_time
+
+
+def get_wake_duration() -> Optional[timedelta]:
+    """
+    Get how long the user has been awake.
+
+    Returns:
+        timedelta since wake, or None if not awake
+    """
+    if not is_user_awake():
+        return None
+
+    wake = get_last_wake_event()
+    if not wake:
+        return None
+
+    return datetime.now() - wake['event_time']
+
+
+def format_wake_time(wake_event: dict) -> str:
+    """
+    Format wake time for display, handling cross-midnight scenarios.
+
+    Args:
+        wake_event: Dict from get_last_wake_event()
+
+    Returns:
+        Formatted string like "7:30 AM" or "11:00 PM (yesterday)"
+    """
+    if not wake_event:
+        return "Unknown"
+
+    wake_time = wake_event['event_time']
+    today = date.today()
+    wake_date = wake_time.date()
+
+    time_str = wake_time.strftime('%I:%M %p').lstrip('0')
+
+    if wake_date == today:
+        return time_str
+    elif wake_date == today - timedelta(days=1):
+        return f"{time_str} (yesterday)"
+    else:
+        # More than a day ago - show the date
+        return f"{time_str} ({wake_date.strftime('%b %d')})"
 
 
 # ============================================================

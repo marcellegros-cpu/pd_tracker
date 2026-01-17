@@ -82,6 +82,7 @@ from pd_tracker.schedules import (
     log_sleep_event,
     get_last_wake_event,
     is_user_awake,
+    format_wake_time,
     SCHEDULE_TYPES,
     INTERVAL_OPTIONS,
 )
@@ -152,6 +153,7 @@ def dashboard():
     # Wake status for medication scheduling
     wake_status = get_last_wake_event()
     is_awake = is_user_awake()
+    wake_time_display = format_wake_time(wake_status) if wake_status else None
 
     return render_template('dashboard.html',
                           med_status=med_status,
@@ -160,7 +162,8 @@ def dashboard():
                           last_sleep=last_sleep,
                           exercise_stats=exercise_stats,
                           wake_status=wake_status,
-                          is_awake=is_awake)
+                          is_awake=is_awake,
+                          wake_time_display=wake_time_display)
 
 
 # ============================================================
@@ -412,11 +415,13 @@ def schedules():
 
     wake_status = get_last_wake_event()
     awake = is_user_awake()
+    wake_time_display = format_wake_time(wake_status) if wake_status else None
 
     return render_template('schedules.html',
                           schedules=schedules_list,
                           wake_status=wake_status,
                           is_awake=awake,
+                          wake_time_display=wake_time_display,
                           schedule_types=SCHEDULE_TYPES)
 
 

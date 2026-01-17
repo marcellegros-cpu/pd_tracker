@@ -11,7 +11,7 @@
     {% if is_awake %}
         <div class="wake-status awake">
             <span class="status-icon">&#9728;</span>
-            <span>You're awake since {{ wake_status.event_time.strftime('%I:%M %p').lstrip('0') }}</span>
+            <span>You're awake since {{ wake_time_display }}</span>
         </div>
         <p class="small muted">Medication reminders are active.</p>
         <form action="{{ url_for('log_going_to_sleep') }}" method="post">
