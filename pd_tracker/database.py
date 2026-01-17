@@ -211,6 +211,20 @@ def init_database():
         )
     """)
 
+    # ============================================================
+    # MIGRATIONS - Add missing columns to existing tables
+    # This handles upgrading older databases to the current schema
+    # ============================================================
+    def add_column_if_missing(table, column, definition):
+        cursor.execute(f'PRAGMA table_info({table})')
+        columns = [col[1] for col in cursor.fetchall()]
+        if column not in columns:
+            cursor.execute(f'ALTER TABLE {table} ADD COLUMN {column} {definition}')
+            print(f"  Added column {column} to {table}")
+
+    # medication_schedules migrations
+    add_column_if_missing('medication_schedules', 'reminders_enabled', 'INTEGER DEFAULT 1')
+
     # Save all the changes
     conn.commit()
     conn.close()
